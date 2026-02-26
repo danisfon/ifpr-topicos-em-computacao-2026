@@ -1,4 +1,5 @@
 import pygame
+from setting import SCREEN_WIDTH, SCREEN_HEIGHT
 
 class Player:
     def __init__(self, x, y, size, speed):
@@ -19,6 +20,15 @@ class Player:
             self.y -= self.speed
         if keys[pygame.K_s]:
             self.y += self.speed
+
+        if self.x < 0:
+            self.x = 0
+        if self.x + self.size > SCREEN_WIDTH:
+            self.x = SCREEN_WIDTH - self.size
+        if self.y < 0:
+            self.y = 0
+        if self.y + self.size > SCREEN_HEIGHT:
+            self.y = SCREEN_HEIGHT - self.size
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, (self.x, self.y, self.size, self.size))
