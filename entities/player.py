@@ -1,6 +1,5 @@
 import pygame
 import math
-from setting import SCREEN_WIDTH, SCREEN_HEIGHT
 
 
 class Vec2:
@@ -40,7 +39,7 @@ class Player:
     MASS         = 1.0     # kg (equal mass for both players)
     RESTITUTION  = 0.6     # bounciness coefficient (0 = no bounce, 1 = perfect elastic)
 
-    def __init__(self, x, y, size, controls, color):
+    def __init__(self, x, y, size, controls, color, screen_width=1280, screen_height=720):
         self.position = Vec2(x, y)
         self.velocity = Vec2(0.0, 0.0)
 
@@ -51,6 +50,8 @@ class Player:
 
         self.controls = controls
         self.color = color
+        self.screen_width = screen_width
+        self.screen_height = screen_height
 
     def get_rect(self):
         return pygame.Rect(int(self.position.x), int(self.position.y),
@@ -104,14 +105,14 @@ class Player:
         if self.position.x < 0:
             self.position.x = 0.0
             self.velocity.x = 0.0
-        if self.position.x + self.size > SCREEN_WIDTH:
-            self.position.x = SCREEN_WIDTH - self.size
+        if self.position.x + self.size > self.screen_width:
+            self.position.x = self.screen_width - self.size
             self.velocity.x = 0.0
         if self.position.y < 0:
             self.position.y = 0.0
             self.velocity.y = 0.0
-        if self.position.y + self.size > SCREEN_HEIGHT:
-            self.position.y = SCREEN_HEIGHT - self.size
+        if self.position.y + self.size > self.screen_height:
+            self.position.y = self.screen_height - self.size
             self.velocity.y = 0.0
 
     def draw(self, screen):
