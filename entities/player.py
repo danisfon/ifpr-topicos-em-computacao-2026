@@ -36,7 +36,7 @@ class Vec2:
 class Player:
     ACCELERATION = 800.0   # pixels/s²
     FRICTION     = 600.0   # deceleration when no input (pixels/s²)
-    MAX_SPEED    = 300.0   # pixels/s
+    MAX_SPEED    = 100.0   # pixels/s
     MASS         = 1.0     # kg (equal mass for both players)
     RESTITUTION  = 0.6     # bounciness coefficient (0 = no bounce, 1 = perfect elastic)
 

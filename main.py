@@ -9,6 +9,9 @@ def main():
     pygame.display.set_caption(TITLE)
 
     clock = pygame.time.Clock()
+    
+    track_image = pygame.image.load("assets/track.png").convert()
+    track_image = pygame.transform.scale(track_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
     controls_player1 = {
         "left":  pygame.K_a,
@@ -43,7 +46,7 @@ def main():
         # Resolve collision between the two players
         resolve_collision(player1, player2)
 
-        screen.fill((0, 0, 0))
+        screen.blit(track_image, (0, 0))
         player1.draw(screen)
         player2.draw(screen)
 
