@@ -2,14 +2,15 @@ import pygame
 from setting import *
 from scenes.menu import Menu
 from run_game import run_game
-
+from scenes.credits_screen import CreditsScreen
 
 def main():
     pygame.init()
 
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     pygame.display.set_caption(TITLE)
-
+    
+    credits = CreditsScreen(screen)
     menu = Menu(screen)
 
     running = True
@@ -27,7 +28,7 @@ def main():
             print("Configurações ainda não implementadas")
 
         elif option == "credits":
-            print("Créditos ainda não implementados")
+            credits.run()
 
         elif option == "exit":
             running = False
