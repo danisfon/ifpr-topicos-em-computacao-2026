@@ -3,6 +3,7 @@ from setting import *
 from scenes.menu import Menu
 from run_game import run_game
 from scenes.credits_screen import CreditsScreen
+from scenes.level_select import LevelSelect
 
 def main():
     pygame.init()
@@ -12,6 +13,7 @@ def main():
     
     credits = CreditsScreen(screen)
     menu = Menu(screen)
+    level_select = LevelSelect(screen)
 
     running = True
 
@@ -19,11 +21,16 @@ def main():
         option = menu.run()
 
         if option == "start":
-            result = run_game(screen)
+            selected_level = level_select.run()
+            
+            if selected_level == "menu":
+                continue
 
-            if result == "exit":
+            if selected_level == "exit":
                 running = False
+                continue
 
+            result = run_game(screen)
         elif option == "settings":
             print("Configurações ainda não implementadas")
 
