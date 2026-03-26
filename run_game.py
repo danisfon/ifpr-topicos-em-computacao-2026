@@ -20,7 +20,7 @@ def run_game(screen):
     clock = pygame.time.Clock()
     font = pygame.font.SysFont("Arial", 20)
 
-    track_image = pygame.image.load("assets/track.png").convert()
+    track_image = pygame.image.load("assets/teste.png").convert()
     track_image = pygame.transform.scale(
         track_image, (screen.get_width(), screen.get_height())
     )
