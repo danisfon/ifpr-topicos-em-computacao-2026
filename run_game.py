@@ -31,6 +31,26 @@ def is_on_grass(player, track_image):
     # detecta verde (grama)
     return g > r and g > b
 
+def is_on_barrier(player, track_image):
+    x = int(player.position.x + player.size // 2)
+    y = int(player.position.y + player.size // 2)
+
+    if x < 0 or y < 0 or x >= track_image.get_width() or y >= track_image.get_height():
+        return False
+
+    r, g, b, *_ = track_image.get_at((x, y))
+
+    # 🔴 vermelho da zebra
+    is_red = r > 200 and g < 80 and b < 80
+
+    # ⚪ branco da zebra
+    is_white = r > 200 and g > 200 and b > 200
+
+    # 🚫 ignorar cinza (asfalto)
+    is_gray = abs(r - g) < 20 and abs(r - b) < 20 and r < 180
+
+    return (is_red or is_white) and not is_gray
+
 
 def run_game(screen):
     clock = pygame.time.Clock()
@@ -90,6 +110,15 @@ def run_game(screen):
         if is_on_grass(player2, track_image):
             player2.velocity.x *= 0.90
             player2.velocity.y *= 0.90
+
+        # 🚧 COLISÃO COM BARREIRA (AQUI 👇)
+        if is_on_barrier(player1, track_image):
+            player1.position -= player1.velocity   # volta
+            player1.velocity *= 0                  # para
+
+        if is_on_barrier(player2, track_image):
+            player2.position -= player2.velocity
+            player2.velocity *= 0
 
         # colisão entre jogadores
         resolve_collision(player1, player2)
