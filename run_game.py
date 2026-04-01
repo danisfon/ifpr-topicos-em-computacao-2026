@@ -16,11 +16,27 @@ def draw_exit_button(screen, font):
     screen.blit(button_text, btn_rect)
 
 
+# 🔥 FUNÇÃO: detectar grama
+def is_on_grass(player, track_image):
+    x = int(player.position.x + player.size // 2)
+    y = int(player.position.y + player.size // 2)
+
+    # evita erro fora da tela
+    if x < 0 or y < 0 or x >= track_image.get_width() or y >= track_image.get_height():
+        return False
+
+    color = track_image.get_at((x, y))
+    r, g, b = color[:3]
+
+    # detecta verde (grama)
+    return g > r and g > b
+
+
 def run_game(screen):
     clock = pygame.time.Clock()
     font = pygame.font.SysFont("Arial", 20)
 
-    track_image = pygame.image.load("assets/teste.png").convert()
+    track_image = pygame.image.load("assets/nivel1.png").convert()
     track_image = pygame.transform.scale(
         track_image, (screen.get_width(), screen.get_height())
     )
@@ -62,11 +78,23 @@ def run_game(screen):
                 if event.key == pygame.K_ESCAPE:
                     return "menu"
 
+        # 🎮 movimentação
         player1.handle_input(delta_time)
         player2.handle_input(delta_time)
 
+        # 🔥 GRAMA desacelera
+        if is_on_grass(player1, track_image):
+            player1.velocity.x *= 0.90
+            player1.velocity.y *= 0.90
+
+        if is_on_grass(player2, track_image):
+            player2.velocity.x *= 0.90
+            player2.velocity.y *= 0.90
+
+        # colisão entre jogadores
         resolve_collision(player1, player2)
 
+        # desenho
         screen.blit(track_image, (0, 0))
         player1.draw(screen)
         player2.draw(screen)
