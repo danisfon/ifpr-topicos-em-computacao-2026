@@ -5,8 +5,8 @@ import pygame
 from scenes.menu import Menu
 from scenes.level_select import LevelSelect
 
-from config import GameConfig
-from phases import Phase1
+from .config import GameConfig
+from .phases import Phase1
 
 
 class HorizontalRacingApp:
