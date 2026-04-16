@@ -1,1 +1,1 @@
-from .app import HorizontalRacingApp
+from .core.app import HorizontalRacingApp

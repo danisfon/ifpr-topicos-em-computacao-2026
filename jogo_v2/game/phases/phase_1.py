@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+from pathlib import Path
 import pygame
 
-from ..config import P1_CONTROLS, P2_CONTROLS
-from ..entities import Car
-from ..player_lane import PlayerLane
+from ..core.config import P1_CONTROLS, P2_CONTROLS
+from ..domain.entities import Car
+from ..domain.player_lane import PlayerLane
 
 
 class Phase1:
@@ -18,31 +19,36 @@ class Phase1:
 
         self.width = screen.get_width()
         self.height = screen.get_height()
+        self._music_started = False
 
         self.p1, self.p2 = self._create_players()
 
     def run(self) -> str:
-        while True:
-            dt = self.clock.tick(60) / 1000.0
+        self._start_phase_music()
+        try:
+            while True:
+                dt = self.clock.tick(60) / 1000.0
 
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    return "exit"
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        return "menu"
-                    if event.key == pygame.K_r and self.is_game_over:
-                        self.p1, self.p2 = self._create_players()
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        return "exit"
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_ESCAPE:
+                            return "menu"
+                        if event.key == pygame.K_r and self.is_game_over:
+                            self.p1, self.p2 = self._create_players()
 
-            keys = pygame.key.get_pressed()
-            self.p1.update(dt, keys)
-            self.p2.update(dt, keys)
+                keys = pygame.key.get_pressed()
+                self.p1.update(dt, keys)
+                self.p2.update(dt, keys)
 
-            self.screen.fill((22, 22, 24))
-            self.p1.draw(self.screen, self.font, self.small_font)
-            self.p2.draw(self.screen, self.font, self.small_font)
-            self._draw_ui()
-            pygame.display.flip()
+                self.screen.fill((22, 22, 24))
+                self.p1.draw(self.screen, self.font, self.small_font)
+                self.p2.draw(self.screen, self.font, self.small_font)
+                self._draw_ui()
+                pygame.display.flip()
+        finally:
+            self._stop_phase_music()
 
     @property
     def is_game_over(self) -> bool:
@@ -101,3 +107,34 @@ class Phase1:
             self.screen.blit(result_text, (panel.centerx - result_text.get_width() // 2, panel.y + 22))
             self.screen.blit(detail, (panel.centerx - detail.get_width() // 2, panel.y + 62))
             self.screen.blit(restart, (panel.centerx - restart.get_width() // 2, panel.y + 92))
+
+    def _start_phase_music(self) -> None:
+        if self._music_started:
+            return
+
+        sounds_dir = Path(__file__).resolve().parents[2] / "assets" / "sounds"
+        mp3_files = sorted(sounds_dir.glob("*.mp3"))
+        if not mp3_files:
+            return
+
+        if not pygame.mixer.get_init():
+            try:
+                pygame.mixer.init()
+            except pygame.error:
+                return
+
+        try:
+            pygame.mixer.music.load(str(mp3_files[0]))
+            pygame.mixer.music.set_volume(0.45)
+            pygame.mixer.music.play(-1)
+            self._music_started = True
+        except pygame.error:
+            self._music_started = False
+
+    def _stop_phase_music(self) -> None:
+        if not self._music_started:
+            return
+
+        if pygame.mixer.get_init():
+            pygame.mixer.music.stop()
+        self._music_started = False

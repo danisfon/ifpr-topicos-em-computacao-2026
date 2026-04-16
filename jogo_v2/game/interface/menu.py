@@ -20,7 +20,7 @@ class Menu:
         self.white = (245, 245, 245)
         self.gray = (150, 150, 150)
         self.yellow = (255, 220, 0)
-        self.green = (0,255,0)
+        self.green = (0, 255, 0)
 
     def draw_vertical_gradient(self, top_color, bottom_color):
         width = self.screen.get_width()
@@ -159,11 +159,11 @@ class Menu:
                     elif event.key == pygame.K_RETURN:
                         if self.selected == 0:
                             return "start"
-                        elif self.selected == 1:
+                        if self.selected == 1:
                             return "settings"
-                        elif self.selected == 2:
+                        if self.selected == 2:
                             return "credits"
-                        elif self.selected == 3:
+                        if self.selected == 3:
                             return "exit"
 
             self.draw()

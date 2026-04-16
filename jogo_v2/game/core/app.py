@@ -2,11 +2,9 @@ from __future__ import annotations
 
 import pygame
 
-from scenes.menu import Menu
-from scenes.level_select import LevelSelect
-
 from .config import GameConfig
-from .phases import Phase1
+from ..phases import Phase1
+from ..interface import Menu, LevelSelect
 
 
 class HorizontalRacingApp:
@@ -43,7 +41,7 @@ class HorizontalRacingApp:
                 return 0
 
             if option == "credits":
-                self._show_simple_message("Créditos disponíveis no jogo principal.")
+                self._show_simple_message("Créditos ainda não implementados.")
                 continue
 
             if option == "settings":
