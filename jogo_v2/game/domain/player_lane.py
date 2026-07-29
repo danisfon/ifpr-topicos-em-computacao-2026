@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 import pygame
 
-from .entities import Car, Obstacle
+from .entities import Car, Obstacle, Item
 
 
 class PlayerLane:
@@ -16,7 +16,9 @@ class PlayerLane:
         self.alive = True
         self.survival_time = 0.0
         self.obstacles: list[Obstacle] = []
+        self.items = []
         self.spawn_timer = 0.0
+        self.item_spawn_timer = 3.0 
 
     def current_world_speed(self) -> float:
         return 220.0 + min(220.0, self.survival_time * 14.0)
@@ -39,9 +41,43 @@ class PlayerLane:
 
         self.obstacles = [o for o in self.obstacles if o.rect.right > self.track_rect.left - 40]
 
+        self.item_spawn_timer -= dt
+
+        if self.item_spawn_timer <= 0:
+            self._spawn_item()
+            self.item_spawn_timer = random.uniform(3.0, 6.0)
+
+        for item in self.items:
+            item.update(dt)
+
+        self.items = [
+            item
+            for item in self.items
+            if item.rect.right > self.track_rect.left - 40
+        ]
+
         car_rect = self.car.rect()
-        if any(car_rect.colliderect(o.rect) for o in self.obstacles):
-            self.alive = False
+        for obstacle in self.obstacles[:]:
+            if car_rect.colliderect(obstacle.rect):
+
+                if self.car.has_shield:
+                    self.car.has_shield = False
+                    self.obstacles.remove(obstacle)
+                else:
+                    self.alive = False
+        
+        for item in self.items[:]:
+            if car_rect.colliderect(item.rect):
+
+                if item.effect == "speed":
+                    self.car.MAX_SPEED += 50
+                    print("Velocidade Aumentada")
+
+                elif item.effect == "shield":
+                    self.car.has_shield = True
+                    print("Escudo ativado!")
+
+                self.items.remove(item)
 
     def _spawn_obstacle(self) -> None:
         width = random.randint(22, 48)
@@ -60,11 +96,41 @@ class PlayerLane:
             )
         )
 
+    def _spawn_item(self):
+        width = 24
+        height = 24
+
+        x = self.track_rect.right + random.randint(0, 260)
+        y = random.randint(
+            self.track_rect.top + 8,
+            self.track_rect.bottom - height - 8
+        )
+
+        speed = random.randint(180, 350)
+
+        effects = ["speed", "shield"]
+        effect = random.choice(effects)
+
+        self.items.append(
+            Item(
+                x,
+                y,
+                width,
+                height,
+                speed,
+                effect
+            )
+        )
+
+
     def draw(self, screen: pygame.Surface, font, small_font) -> None:
         pygame.draw.rect(screen, (70, 70, 70), self.track_rect)
         pygame.draw.rect(screen, self.accent_color, self.track_rect, 3)
 
         self._draw_lane_stripes(screen)
+
+        for item in self.items:
+            item.draw(screen)
 
         for obstacle in self.obstacles:
             obstacle.draw(screen)

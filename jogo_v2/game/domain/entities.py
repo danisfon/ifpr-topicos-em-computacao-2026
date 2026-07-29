@@ -23,6 +23,9 @@ class Car:
         self.controls = controls
         self.bounds_rect = bounds_rect
 
+        self.has_shield = False
+        
+
     def rect(self) -> pygame.Rect:
         return pygame.Rect(int(self.position.x), int(self.position.y), int(self.size), int(self.size))
 
@@ -109,4 +112,32 @@ class Obstacle:
         self.rect.x -= int(self.speed * dt)
 
     def draw(self, screen: pygame.Surface) -> None:
+        pygame.draw.rect(screen, self.color, self.rect, border_radius=4)
+
+class Item:
+    def __init__(
+        self,
+        x,
+        y,
+        width,
+        height,
+        speed,
+        effect,
+        color=(0, 255, 0)
+    ):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.speed = speed
+        self.effect = effect
+        
+        if effect == "speed":
+            self.color = (0, 180, 255)      # Azul
+        elif effect == "shield":
+            self.color = (0, 255, 0)        # Verde
+        else:
+            self.color = (255, 255, 255)    # Branco
+
+    def update(self, dt):
+        self.rect.x -= int(self.speed * dt)
+
+    def draw(self, screen):
         pygame.draw.rect(screen, self.color, self.rect, border_radius=4)
