@@ -34,9 +34,8 @@ class PlayerLane:
             dynamic = max(0.0, 0.55 - self.survival_time * 0.02)
             self.spawn_timer = random.uniform(0.28 + dynamic, 0.9 + dynamic)
 
-        speed = self.current_world_speed()
         for obstacle in self.obstacles:
-            obstacle.update(dt, speed)
+            obstacle.update(dt)
 
         self.obstacles = [o for o in self.obstacles if o.rect.right > self.track_rect.left - 40]
 
@@ -49,7 +48,17 @@ class PlayerLane:
         height = random.randint(22, 48)
         x = self.track_rect.right + random.randint(0, 260)
         y = random.randint(self.track_rect.top + 8, self.track_rect.bottom - height - 8)
-        self.obstacles.append(Obstacle(x, y, width, height))
+
+        speed = random.randint(180, 580)
+        self.obstacles.append(
+            Obstacle(
+                x,
+                y,
+                width,
+                height,
+                speed
+            )
+        )
 
     def draw(self, screen: pygame.Surface, font, small_font) -> None:
         pygame.draw.rect(screen, (70, 70, 70), self.track_rect)

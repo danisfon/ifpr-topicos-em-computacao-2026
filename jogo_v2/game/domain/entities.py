@@ -92,12 +92,21 @@ class Car:
 
 
 class Obstacle:
-    def __init__(self, x: int, y: int, width: int, height: int, color=(40, 40, 40)):
+    def __init__(
+        self,
+        x,
+        y,
+        width,
+        height,
+        speed,
+        color=(40,40,40)
+    ):
         self.rect = pygame.Rect(x, y, width, height)
         self.color = color
-
-    def update(self, dt: float, world_speed: float) -> None:
-        self.rect.x -= int(world_speed * dt)
+        self.speed = speed
+        
+    def update(self, dt):
+        self.rect.x -= int(self.speed * dt)
 
     def draw(self, screen: pygame.Surface) -> None:
         pygame.draw.rect(screen, self.color, self.rect, border_radius=4)

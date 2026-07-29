@@ -5,6 +5,7 @@ import pygame
 from .config import GameConfig
 from ..phases import Phase1
 from ..interface import Menu, LevelSelect
+from ..interface.credits import CreditsScreen
 
 
 class HorizontalRacingApp:
@@ -33,6 +34,7 @@ class HorizontalRacingApp:
 
         menu = Menu(self.screen)
         level_select = self._build_level_select(self.screen)
+        credits = CreditsScreen(self.screen)
 
         while True:
             option = menu.run()
@@ -41,7 +43,7 @@ class HorizontalRacingApp:
                 return 0
 
             if option == "credits":
-                self._show_simple_message("Créditos ainda não implementados.")
+                credits.run()
                 continue
 
             if option == "settings":
