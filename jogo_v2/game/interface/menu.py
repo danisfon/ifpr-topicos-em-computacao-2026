@@ -63,10 +63,6 @@ class Menu:
         title_rect = title_surface.get_rect(center=(width // 2, 45))
         self.screen.blit(title_surface, title_rect)
 
-        subtitle_surface = self.subtitle_font.render("MENU PRINCIPAL", True, self.red_light)
-        subtitle_rect = subtitle_surface.get_rect(center=(width // 2, 88))
-        self.screen.blit(subtitle_surface, subtitle_rect)
-
     def draw_decorations(self, width):
         line_width = 320
         gap = 140
