@@ -237,8 +237,8 @@ class Phase1:
             / "sprites"
         )
 
-        player1_sprite = sprites / "player1.png"
-        player2_sprite = sprites / "player2.png"
+        player1_sprite = sprites / "playerBranco.png"
+        player2_sprite = sprites / "playerBranco.png"
 
         p1_car = Car(
             x=track1.left + 90,
@@ -264,14 +264,14 @@ class Phase1:
             "Jogador 1",
             track1,
             p1_car,
-            (190, 120, 255),
+            (255, 255, 255),
         )
 
         p2 = PlayerLane(
             "Jogador 2",
             track2,
             p2_car,
-            (255, 120, 120),
+            (255, 255, 255),
         )
 
         return p1, p2
