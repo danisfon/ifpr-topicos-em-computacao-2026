@@ -36,6 +36,7 @@ class PlayerLane:
 
         self.obstacle_sprites = [
             str(sprites_path / "obstaculo.png"),
+            str(sprites_path / "obstaculo2.png"),
         ]
 
     def current_world_speed(self) -> float:
@@ -159,25 +160,19 @@ class PlayerLane:
 
         speed = random.randint(180, 350)
 
-        effect = random.choice(
-            [
-                "speed",
-                "shield",
-            ]
+        sprites_path = (
+            Path(__file__).resolve().parents[2]
+            / "assets"
+            / "sprites"
         )
 
-        sprites_path = (
-        Path(__file__).resolve().parents[2]
-        / "assets"
-        / "sprites" 
-        )
         effect = random.choice(["speed", "shield"])
 
         if effect == "speed":
             sprite = str(sprites_path / "speed.png")
         else:
             sprite = str(sprites_path / "shield.png")
-            
+
         self.items.append(
             Item(
                 x,
