@@ -104,6 +104,7 @@ class PlayerLane:
 
                 else:
 
+                    self.car.damaged = True
                     self.alive = False
 
         for item in self.items[:]:

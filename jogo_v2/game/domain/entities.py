@@ -24,6 +24,7 @@ class Car:
         width: int,
         height: int,
         sprite_path: str,
+        damaged_sprite_path: str,
         controls,
         bounds_rect: pygame.Rect,
     ):
@@ -37,16 +38,29 @@ class Car:
         self.bounds_rect = bounds_rect
 
         self.has_shield = False
+        self.damaged = False
 
-        self.sprite = pygame.image.load(sprite_path).convert_alpha()
+        self.sprite = self._load_sprite(sprite_path)
+        self.damaged_sprite = self._load_sprite(damaged_sprite_path)
 
-        # Remove bordas transparentes da imagem
-        bounding = self.sprite.get_bounding_rect()
-        self.sprite = self.sprite.subsurface(bounding)
+        # Guarda o tamanho real da sprite normal
+        self.width = self.sprite.get_width()
+        self.height = self.sprite.get_height()
+
+    def _load_sprite(self, sprite_path):
+        sprite = pygame.image.load(sprite_path).convert_alpha()
+
+        # Remove bordas transparentes
+        bounding = sprite.get_bounding_rect()
+
+        if not bounding.width or not bounding.height:
+            return sprite
+
+        sprite = sprite.subsurface(bounding)
 
         # Mantém a proporção da imagem
-        original_width = self.sprite.get_width()
-        original_height = self.sprite.get_height()
+        original_width = sprite.get_width()
+        original_height = sprite.get_height()
 
         scale = min(
             self.width / original_width,
@@ -56,14 +70,12 @@ class Car:
         new_width = int(original_width * scale)
         new_height = int(original_height * scale)
 
-        self.sprite = pygame.transform.smoothscale(
-            self.sprite,
+        sprite = pygame.transform.smoothscale(
+            sprite,
             (new_width, new_height)
         )
 
-        # Guarda o tamanho real da sprite
-        self.width = new_width
-        self.height = new_height
+        return sprite
 
     def rect(self) -> pygame.Rect:
         return pygame.Rect(
@@ -136,8 +148,14 @@ class Car:
             self.velocity.y = 0.0
 
     def draw(self, screen: pygame.Surface) -> None:
+
+        if self.damaged:
+            sprite = self.damaged_sprite
+        else:
+            sprite = self.sprite
+
         screen.blit(
-            self.sprite,
+            sprite,
             (self.position.x, self.position.y),
         )
 
