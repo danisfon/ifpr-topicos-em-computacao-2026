@@ -26,6 +26,7 @@ class PlayerLane:
 
         self.spawn_timer = 0.0
         self.item_spawn_timer = 3.0
+        self.lane_offset = 0.0
 
         # Pasta onde ficam os carros dos obstáculos
         sprites_path = (
@@ -48,6 +49,8 @@ class PlayerLane:
             return
 
         self.survival_time += dt
+
+        self.lane_offset += self.current_world_speed() * dt
 
         self.car.handle_input_and_move(dt, keys)
 
@@ -258,8 +261,7 @@ class PlayerLane:
         gap = 30
 
         offset = int(
-            (pygame.time.get_ticks() * 0.35)
-            % (stripe_w + gap)
+            self.lane_offset % (stripe_w + gap)
         )
 
         x = self.track_rect.left - offset
