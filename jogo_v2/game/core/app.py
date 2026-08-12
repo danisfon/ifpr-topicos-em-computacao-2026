@@ -3,7 +3,7 @@ from __future__ import annotations
 import pygame
 
 from .config import GameConfig
-from ..phases import Phase1
+from ..phases import GameManager
 from ..interface import Menu, LevelSelect
 from ..interface.credits import CreditsScreen
 
@@ -34,7 +34,7 @@ class HorizontalRacingApp:
 
         menu = Menu(self.screen)
         level_select = self._build_level_select(self.screen)
-        credits = CreditsScreen(self.screen)
+        credits_screen = CreditsScreen(self.screen)
 
         while True:
             option = menu.run()
@@ -43,7 +43,7 @@ class HorizontalRacingApp:
                 return 0
 
             if option == "credits":
-                credits.run()
+                credits_screen.run()
                 continue
 
             if option == "settings":
@@ -60,7 +60,7 @@ class HorizontalRacingApp:
                 return 0
 
             if selected_level == 0:
-                phase = Phase1(self.screen, self.clock, self.font, self.small_font)
+                phase = GameManager(self.screen, self.clock, self.font, self.small_font)
                 phase_result = phase.run()
                 if phase_result == "exit":
                     return 0

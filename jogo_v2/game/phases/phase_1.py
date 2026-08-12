@@ -6,10 +6,10 @@ import pygame
 
 from ..core.config import P1_CONTROLS, P2_CONTROLS
 from ..domain.entities import Car
-from ..domain.player_lane import PlayerLane
+from ..domain.player_lane import GameWorld
 
 
-class Phase1:
+class GameManager:
     name = "Fase 1"
 
     CAR_WIDTH = 70
@@ -123,14 +123,14 @@ class Phase1:
             bounds_rect=track2,
         )
 
-        p1 = PlayerLane(
+        p1 = GameWorld(
             "Jogador 1",
             track1,
             p1_car,
             (255, 255, 255),
         )
 
-        p2 = PlayerLane(
+        p2 = GameWorld(
             "Jogador 2",
             track2,
             p2_car,
@@ -285,3 +285,7 @@ class Phase1:
             pygame.mixer.music.stop()
 
         self._music_started = False
+
+
+class Phase1(GameManager):
+    pass

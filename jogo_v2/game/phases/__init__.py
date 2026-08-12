@@ -1,1 +1,1 @@
-from .phase_1 import Phase1
+from .phase_1 import GameManager, Phase1

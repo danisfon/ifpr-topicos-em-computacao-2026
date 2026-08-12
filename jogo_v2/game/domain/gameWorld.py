@@ -4,17 +4,18 @@ import random
 from pathlib import Path
 import pygame
 
-from .entities import Car, Obstacle, Item
+from .collision import CollisionManager
+from .entities import Car, Obstacle, Consumable
 
 
-class PlayerLane:
+class GameWorld:
 
     OBSTACLE_WIDTH = 70
     OBSTACLE_HEIGHT = 100
 
     def __init__(self, name: str, track_rect: pygame.Rect, car: Car, accent_color):
         self.name = name
-        self.track_rect = track_rect
+        self.track_rect = track_rect.copy()
         self.car = car
         self.accent_color = accent_color
 
@@ -22,11 +23,12 @@ class PlayerLane:
         self.survival_time = 0.0
 
         self.obstacles: list[Obstacle] = []
-        self.items: list[Item] = []
+        self.items: list[Consumable] = []
 
         self.spawn_timer = 0.0
         self.item_spawn_timer = 3.0
         self.lane_offset = 0.0
+        self.speed_boost_timer = 0.0
 
         # Pasta onde ficam os carros dos obstáculos
         sprites_path = (
@@ -49,6 +51,7 @@ class PlayerLane:
             return
 
         self.survival_time += dt
+        self._update_effects(dt)
 
         self.lane_offset += self.current_world_speed() * dt
 
@@ -76,7 +79,7 @@ class PlayerLane:
         self.obstacles = [
             o
             for o in self.obstacles
-            if o.rect.right > self.track_rect.left - 40
+            if o.rect().right > self.track_rect.left - 40
         ]
 
         self.item_spawn_timer -= dt
@@ -91,40 +94,22 @@ class PlayerLane:
         self.items = [
             item
             for item in self.items
-            if item.rect.right > self.track_rect.left - 40
+            if item.rect().right > self.track_rect.left - 40
         ]
 
-        car_rect = self.car.rect()
+        hit_obstacle, consumed_items, collided_obstacle = CollisionManager.resolve_basic(self.car, self.obstacles, self.items)
 
-        for obstacle in self.obstacles[:]:
+        if hit_obstacle:
+            if self.car.has_shield:
+                self.car.has_shield = False
+                if collided_obstacle is not None and collided_obstacle in self.obstacles:
+                    self.obstacles.remove(collided_obstacle)
+            else:
+                self.car.damaged = True
+                self.alive = False
 
-            if car_rect.colliderect(obstacle.rect):
-
-                if self.car.has_shield:
-
-                    self.car.has_shield = False
-                    self.obstacles.remove(obstacle)
-
-                else:
-
-                    self.car.damaged = True
-                    self.alive = False
-
-        for item in self.items[:]:
-
-            if car_rect.colliderect(item.rect):
-
-                if item.effect == "speed":
-
-                    self.car.MAX_SPEED += 50
-                    print("Velocidade aumentada!")
-
-                elif item.effect == "shield":
-
-                    self.car.has_shield = True
-                    print("Escudo ativado!")
-
-                self.items.remove(item)
+        for consumed in consumed_items:
+            self._apply_consumable(consumed.effect)
 
     def _spawn_obstacle(self):
 
@@ -136,6 +121,7 @@ class PlayerLane:
         )
 
         speed = random.randint(180, 580)
+        acceleration_x = random.uniform(-30.0, 30.0)
 
         sprite = random.choice(self.obstacle_sprites)
 
@@ -146,6 +132,7 @@ class PlayerLane:
                 width=self.OBSTACLE_WIDTH,
                 height=self.OBSTACLE_HEIGHT,
                 speed=speed,
+                acceleration_x=acceleration_x,
                 sprite_path=sprite,
             )
         )
@@ -170,15 +157,15 @@ class PlayerLane:
             / "sprites"
         )
 
-        effect = random.choice(["speed", "shield"])
+        effect = random.choice(["speed", "shield", "stability"])
 
-        if effect == "speed":
+        if effect in ("speed", "stability"):
             sprite = str(sprites_path / "speed.png")
         else:
             sprite = str(sprites_path / "shield.png")
 
         self.items.append(
-            Item(
+            Gameble(
                 x,
                 y,
                 width,
@@ -281,3 +268,26 @@ class PlayerLane:
             )
 
             x += stripe_w + gap
+
+    def _apply_consumable(self, effect: str) -> None:
+        if effect == "speed":
+            self.car.MAX_SPEED += 30
+            self.speed_boost_timer = 3.5
+            return
+
+        if effect == "shield":
+            self.car.has_shield = True
+            return
+
+        if effect == "stability":
+            self.car.FRICTION = min(900.0, self.car.FRICTION + 80.0)
+
+    def _update_effects(self, dt: float) -> None:
+        if self.speed_boost_timer > 0.0:
+            self.speed_boost_timer -= dt
+            if self.speed_boost_timer <= 0.0:
+                self.car.MAX_SPEED = max(340.0, self.car.MAX_SPEED - 30)
+
+
+class PlayerLane(GameWorld):
+    pass
