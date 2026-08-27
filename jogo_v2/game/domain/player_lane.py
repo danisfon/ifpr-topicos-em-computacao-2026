@@ -38,8 +38,20 @@ class PlayerLane:
         self.obstacle_sprites = [
             str(sprites_path / "obstaculo.png"),
             str(sprites_path / "obstaculo2.png"),
+            # str(sprites_path / "cone.png")
         ]
 
+        self.obstacle_types = [
+    {
+        "sprite": str(sprites_path / "obstaculo.png"),
+        "static": False,
+    },
+    {
+        "sprite": str(sprites_path / "obstaculo2.png"),
+        "static": False,
+    },
+    
+  ]
     def current_world_speed(self) -> float:
         return 220.0 + min(220.0, self.survival_time * 14.0)
 
@@ -114,10 +126,10 @@ class PlayerLane:
 
             if car_rect.colliderect(item.rect):
 
-                if item.effect == "speed":
+                if item.effect == "oleo":
 
-                    self.car.MAX_SPEED += 50
-                    print("Velocidade aumentada!")
+                    self.car.MAX_SPEED -= 100
+                    print("Velocidade diminuida!")
 
                 elif item.effect == "shield":
 
@@ -128,16 +140,19 @@ class PlayerLane:
 
     def _spawn_obstacle(self):
 
+        obstacle_data = random.choice(self.obstacle_types)
+
+        if obstacle_data["static"]:
+            speed = self.current_world_speed()
+        else:
+            speed = random.randint(180, 580)
+
         x = self.track_rect.right + random.randint(0, 260)
 
         y = random.randint(
             self.track_rect.top + 8,
             self.track_rect.bottom - self.OBSTACLE_HEIGHT - 8,
         )
-
-        speed = random.randint(180, 580)
-
-        sprite = random.choice(self.obstacle_sprites)
 
         self.obstacles.append(
             Obstacle(
@@ -146,7 +161,7 @@ class PlayerLane:
                 width=self.OBSTACLE_WIDTH,
                 height=self.OBSTACLE_HEIGHT,
                 speed=speed,
-                sprite_path=sprite,
+                sprite_path=obstacle_data["sprite"],
             )
         )
 
@@ -170,10 +185,10 @@ class PlayerLane:
             / "sprites"
         )
 
-        effect = random.choice(["speed", "shield"])
+        effect = random.choice(["oleo", "shield"])
 
-        if effect == "speed":
-            sprite = str(sprites_path / "speed.png")
+        if effect == "oleo":
+            sprite = str(sprites_path / "oleo.png")
         else:
             sprite = str(sprites_path / "shield.png")
 

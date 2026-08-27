@@ -253,14 +253,6 @@ class Item:
             (width, height)
         )
 
-        if effect == "speed":
-            self.color = (0, 180, 255)
-
-        elif effect == "shield":
-            self.color = (0, 255, 0)
-
-        else:
-            self.color = (255, 255, 255)
 
     def update(self, dt):
         self.rect.x -= int(self.speed * dt)
