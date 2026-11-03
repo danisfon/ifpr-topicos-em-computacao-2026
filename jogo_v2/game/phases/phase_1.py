@@ -23,6 +23,8 @@ class GameManager:
         clock: pygame.time.Clock,
         font,
         small_font,
+        player_names: tuple[str, str] = ('Jogador 1', 'Jogador 2'),
+        score_store=None,
     ) -> None:
         self.screen     = screen
         self.clock      = clock
@@ -33,6 +35,11 @@ class GameManager:
         self.height = screen.get_height()
 
         self._music_started = False
+        self.player_names = player_names
+        self.score_store = score_store
+        self._result_saved = False
+        self._finish_timer = 0.0
+        self.save_message = ''
 
         self.p1, self.p2 = self._create_players()
 
@@ -41,7 +48,7 @@ class GameManager:
 
         try:
             while True:
-                dt = self.clock.tick(60) / 1000.0
+                dt = min(self.clock.tick(60) / 1000.0, 0.05)
 
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -52,10 +59,18 @@ class GameManager:
                             return "menu"
                         if event.key == pygame.K_r and self.is_game_over:
                             self.p1, self.p2 = self._create_players()
+                            self._result_saved = False
+                            self._finish_timer = 0.0
+                            self.save_message = ''
+                        if event.key == pygame.K_RETURN and self.is_game_over:
+                            return 'menu'
 
                 keys = pygame.key.get_pressed()
                 self.p1.update(dt, keys)
                 self.p2.update(dt, keys)
+                self._update_result(dt)
+                if self._finish_timer >= 10.0:
+                    return 'menu'
 
                 self.screen.fill((22, 22, 24))
                 self.p1.draw(self.screen, self.font, self.small_font)
@@ -71,6 +86,19 @@ class GameManager:
     def is_game_over(self) -> bool:
         return (not self.p1.alive) and (not self.p2.alive)
 
+    def _update_result(self, dt: float) -> None:
+        if not self.is_game_over:
+            return
+        if not self._result_saved:
+            if self.score_store is not None:
+                try:
+                    self.score_store.save_match((self.p1, self.p2))
+                    self.save_message = 'Pontuação salva'
+                except (OSError, ValueError):
+                    self.save_message = 'Falha ao salvar histórico; arquivo preservado'
+            self._result_saved = True
+        self._finish_timer += dt
+
     def _create_players(self) -> tuple[PlayerLane, PlayerLane]:
         margin      = 12
         lane_height = (self.height - 100) // 2
@@ -81,8 +109,8 @@ class GameManager:
         p1_car = self._build_car(track1, P1_CONTROLS, "playerBranco.png", "playerBrancoDanificado.png")
         p2_car = self._build_car(track2, P2_CONTROLS, "playerBranco.png", "playerBrancoDanificado.png")
 
-        p1 = PlayerLane("Jogador 1", track1, p1_car, (255, 255, 255))
-        p2 = PlayerLane("Jogador 2", track2, p2_car, (255, 255, 255))
+        p1 = PlayerLane(self.player_names[0], track1, p1_car, (255, 255, 255))
+        p2 = PlayerLane(self.player_names[1], track2, p2_car, (255, 255, 255))
 
         return p1, p2
 
@@ -123,17 +151,17 @@ class GameManager:
         self.screen.blit(controls, (self.width // 2 - controls.get_width() // 2, 44))
 
     def _draw_game_over_panel(self) -> None:
-        if self.p1.survival_time > self.p2.survival_time:
-            result_text = "Vencedor: Jogador 1"
+        if self.p1.score > self.p2.score:
+            result_text = f"Vencedor: {self.p1.name}"
             color = self.p1.accent_color
-        elif self.p2.survival_time > self.p1.survival_time:
-            result_text = "Vencedor: Jogador 2"
+        elif self.p2.score > self.p1.score:
+            result_text = f"Vencedor: {self.p2.name}"
             color = self.p2.accent_color
         else:
             result_text = "Empate!"
             color = (255, 255, 255)
 
-        panel = pygame.Rect(self.width // 2 - 240, self.height // 2 - 75, 480, 150)
+        panel = pygame.Rect(self.width // 2 - 340, self.height // 2 - 95, 680, 190)
         bg = pygame.Surface((panel.width, panel.height), pygame.SRCALPHA)
         bg.fill((0, 0, 0, 185))
         self.screen.blit(bg, panel.topleft)
@@ -141,17 +169,19 @@ class GameManager:
 
         result_surf  = self.font.render(result_text, True, color)
         detail_surf  = self.small_font.render(
-            f"J1: {self.p1.survival_time:.2f}s  |  J2: {self.p2.survival_time:.2f}s",
+            f"J1: {self.p1.score} pontos  |  J2: {self.p2.score} pontos",
             True, (240, 240, 240),
         )
         restart_surf = self.small_font.render(
-            "Pressione R para jogar novamente", True, (255, 255, 255),
+            f"R: reiniciar | ENTER: menu ({max(0, 10 - int(self._finish_timer))}s)", True, (255, 255, 255),
         )
 
         cx = panel.centerx
         self.screen.blit(result_surf,  (cx - result_surf.get_width()  // 2, panel.y + 20))
         self.screen.blit(detail_surf,  (cx - detail_surf.get_width()  // 2, panel.y + 65))
         self.screen.blit(restart_surf, (cx - restart_surf.get_width() // 2, panel.y + 100))
+        saved = self.small_font.render(self.save_message, True, (240, 240, 240))
+        self.screen.blit(saved, (cx - saved.get_width() // 2, panel.y + 140))
 
     def _start_music(self) -> None:
         if self._music_started:

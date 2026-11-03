@@ -31,6 +31,7 @@ class GameWorld:
 
         self.alive = True
         self.survival_time = 0.0
+        self.bonus_score = 0
 
         self.obstacles: list[Obstacle] = []
         self.items: list[Consumable] = []
@@ -51,6 +52,10 @@ class GameWorld:
 
     def current_world_speed(self) -> float:
         return 220.0 + min(220.0, self.survival_time * 14.0)
+
+    @property
+    def score(self) -> int:
+        return int(self.survival_time * 10.0) + self.bonus_score
 
     def update(self, dt: float, keys) -> None:
         self.car.update_animation(dt)
@@ -157,6 +162,8 @@ class GameWorld:
 
         for consumed in consumed_items:
             self._apply_consumable_effect(consumed.effect)
+            if consumed.effect != 'oleo':
+                self.bonus_score += 25
 
     def _apply_consumable_effect(self, effect: str) -> None:
         if effect == "speed":
@@ -212,7 +219,7 @@ class GameWorld:
 
     def _draw_hud(self, screen: pygame.Surface, font, small_font) -> None:
         name_surf   = font.render(self.name, True, self.accent_color)
-        time_surf   = small_font.render(f"Tempo: {self.survival_time:.2f}s", True, (255, 255, 255))
+        time_surf   = small_font.render(f"Tempo: {self.survival_time:.2f}s | Pontos: {self.score}", True, (255, 255, 255))
 
         status_color = (120, 255, 120) if self.alive else (255, 120, 120)
         status_surf = small_font.render(

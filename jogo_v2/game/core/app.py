@@ -6,6 +6,8 @@ from .config import GameConfig
 from ..phases import GameManager
 from ..interface import Menu, LevelSelect
 from ..interface.credits import CreditsScreen
+from .scores import ScoreStore
+from ..interface.scores import ScoreScreens
 
 
 class HorizontalRacingApp:
@@ -35,6 +37,8 @@ class HorizontalRacingApp:
         menu = Menu(self.screen)
         level_select = self._build_level_select(self.screen)
         credits_screen = CreditsScreen(self.screen)
+        score_store = ScoreStore()
+        scores = ScoreScreens(self.screen, self.clock, self.small_font, score_store)
 
         while True:
             option = menu.run()
@@ -43,7 +47,13 @@ class HorizontalRacingApp:
                 return 0
 
             if option == "credits":
-                credits_screen.run()
+                if credits_screen.run() == 'exit':
+                    return 0
+                continue
+
+            if option == 'scores':
+                if scores.history() == 'exit':
+                    return 0
                 continue
 
             if option == "settings":
@@ -60,7 +70,12 @@ class HorizontalRacingApp:
                 return 0
 
             if selected_level == 0:
-                phase = GameManager(self.screen, self.clock, self.font, self.small_font)
+                names = scores.names()
+                if names == 'exit':
+                    return 0
+                if names == 'menu':
+                    continue
+                phase = GameManager(self.screen, self.clock, self.font, self.small_font, names, score_store)
                 phase_result = phase.run()
                 if phase_result == "exit":
                     return 0

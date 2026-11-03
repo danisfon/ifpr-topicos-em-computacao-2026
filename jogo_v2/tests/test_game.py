@@ -3,7 +3,10 @@ os.environ['SDL_VIDEODRIVER'] = 'dummy'
 os.environ['SDL_AUDIODRIVER'] = 'dummy'
 
 import unittest
+import tempfile
+from pathlib import Path
 import pygame
+from game.core.scores import ScoreStore
 from game.domain.animation import Animation
 from game.phases.phase_1 import GameManager
 
@@ -44,6 +47,28 @@ class GameTests(unittest.TestCase):
         car.update_motion(.1)
         self.assertAlmostEqual(car.position.x - initial, .05)
         self.game.p1.draw(self.screen, self.game.font, self.game.small_font)
+
+    def test_match_saved_once_and_persists(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'scores.json'
+            self.game.score_store = ScoreStore(path)
+            self.game.p1.name = 'João'
+            self.game.p1.survival_time = 12.5
+            self.game.p1.alive = self.game.p2.alive = False
+            self.game._update_result(.1)
+            self.game._update_result(.1)
+            rows = ScoreStore(path).read()
+            self.assertEqual(len(rows), 2)
+            self.assertEqual(rows[0]['name'], 'João')
+            self.assertEqual(rows[0]['score'], 125)
+
+    def test_invalid_history_is_preserved(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'scores.json'
+            path.write_text('invalid', encoding='utf-8')
+            with self.assertRaises(ValueError):
+                ScoreStore(path).save_match((self.game.p1, self.game.p2))
+            self.assertEqual(path.read_text(), 'invalid')
 
 
 if __name__ == '__main__':

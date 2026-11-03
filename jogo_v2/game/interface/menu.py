@@ -11,7 +11,7 @@ class Menu:
         self.option_font = pygame.font.SysFont("Arial", 38, bold=True)
         self.footer_font = pygame.font.SysFont("Arial", 20)
 
-        self.options = ["Iniciar", "Configuracoes", "Creditos", "Sair"]
+        self.options = ["Iniciar", "Pontuacoes", "Creditos", "Sair"]
         self.selected = 0
 
         self.bg_color = (10, 10, 10)
@@ -156,7 +156,7 @@ class Menu:
                         if self.selected == 0:
                             return "start"
                         if self.selected == 1:
-                            return "settings"
+                            return "scores"
                         if self.selected == 2:
                             return "credits"
                         if self.selected == 3:
