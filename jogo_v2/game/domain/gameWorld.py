@@ -53,6 +53,7 @@ class GameWorld:
         return 220.0 + min(220.0, self.survival_time * 14.0)
 
     def update(self, dt: float, keys) -> None:
+        self.car.update_animation(dt)
         if not self.alive:
             return
 

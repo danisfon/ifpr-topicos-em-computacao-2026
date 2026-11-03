@@ -2,12 +2,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import pygame
+from .animation import Animation, AnimationSet, driving_frames
 
 
 @dataclass
 class Vec2:
     x: float = 0.0
     y: float = 0.0
+
+    def __post_init__(self) -> None:
+        self.x = float(self.x)
+        self.y = float(self.y)
 
     def __add__(self, other: Vec2) -> Vec2:
         return Vec2(self.x + other.x, self.y + other.y)
@@ -52,17 +57,18 @@ class GameObject:
     def __init__(self, x: float, y: float, max_width: int, max_height: int, sprite_path: str) -> None:
         self.position = Vec2(float(x), float(y))
         self.sprite = Sprite(sprite_path, max_width, max_height)
+        self.size = Vec2(self.sprite.width, self.sprite.height)
 
     @property
-    def width(self) -> int:
-        return self.sprite.width
+    def width(self) -> float:
+        return self.size.x
 
     @property
-    def height(self) -> int:
-        return self.sprite.height
+    def height(self) -> float:
+        return self.size.y
 
     def rect(self) -> pygame.Rect:
-        return pygame.Rect(int(self.position.x), int(self.position.y), self.width, self.height)
+        return pygame.Rect(round(self.position.x), round(self.position.y), round(self.size.x), round(self.size.y))
 
     def draw(self, screen: pygame.Surface) -> None:
         screen.blit(self.sprite.surface, (self.position.x, self.position.y))
@@ -82,10 +88,8 @@ class DynamicObject(GameObject):
         self.acceleration = Vec2(0.0, 0.0)
 
     def update_motion(self, dt: float) -> None:
-        self.velocity.x += self.acceleration.x * dt
-        self.velocity.y += self.acceleration.y * dt
-        self.position.x += self.velocity.x * dt
-        self.position.y += self.velocity.y * dt
+        self.velocity = self.velocity + self.acceleration * dt
+        self.position = self.position + self.velocity * dt
 
 
 class Car(DynamicObject):
@@ -110,20 +114,29 @@ class Car(DynamicObject):
         self.has_shield = False
         self.damaged = False
         self._damaged_sprite = Sprite(damaged_sprite_path, max_width, max_height)
+        damaged = pygame.transform.smoothscale(self._damaged_sprite.surface, self.sprite.surface.get_size())
+        self.animations = AnimationSet({
+            "driving": Animation(driving_frames(self.sprite.surface)),
+            "damaged": Animation([self.sprite.surface, damaged, self.sprite.surface, damaged], 10.0, False),
+        }, "driving")
+
+    def update_animation(self, dt: float) -> None:
+        self.animations.play("damaged" if self.damaged else "driving")
+        self.animations.update(dt)
 
     def update(self, dt: float, keys) -> None:
-        input_x, input_y = self._read_input(keys)
+        direction = self._read_input(keys)
 
-        self.acceleration.x = input_x * self.ACCELERATION
-        self.acceleration.y = input_y * self.ACCELERATION
+        self.acceleration = direction * self.ACCELERATION
 
-        self.update_motion(dt)
-        self._apply_friction(dt, input_x, "x")
-        self._apply_friction(dt, input_y, "y")
+        self.velocity = self.velocity + self.acceleration * dt
+        self._apply_friction(dt, direction.x, "x")
+        self._apply_friction(dt, direction.y, "y")
         self._clamp_speed()
+        self.position = self.position + self.velocity * dt
         self._clamp_to_bounds()
 
-    def _read_input(self, keys) -> tuple[float, float]:
+    def _read_input(self, keys) -> Vec2:
         input_x = 0.0
         input_y = 0.0
 
@@ -136,7 +149,7 @@ class Car(DynamicObject):
         if keys[self.controls["down"]]:
             input_y += 1.0
 
-        return input_x, input_y
+        return Vec2(input_x, input_y)
 
     def _apply_friction(self, dt: float, input_value: float, axis: str) -> None:
         if input_value != 0.0:
@@ -179,8 +192,9 @@ class Car(DynamicObject):
             self.velocity.y = 0.0
 
     def draw(self, screen: pygame.Surface) -> None:
-        surface = self._damaged_sprite.surface if self.damaged else self.sprite.surface
-        screen.blit(surface, (self.position.x, self.position.y))
+        screen.blit(self.animations.frame, (self.position.x, self.position.y))
+        if self.has_shield:
+            pygame.draw.ellipse(screen, (80, 200, 255), self.rect().inflate(10, 10), 2)
 
 
 class Obstacle(DynamicObject):
