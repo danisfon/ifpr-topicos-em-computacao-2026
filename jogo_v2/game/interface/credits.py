@@ -74,7 +74,7 @@ class CreditsScreen:
                          (width // 2 - 200, 140),
                          (width // 2 + 200, 140), 4)
 
-        y = 220
+        y = 185
 
         texts = [
 
@@ -115,7 +115,7 @@ class CreditsScreen:
 
             self.screen.blit(surface, rect)
 
-            y += 40
+            y += 35
 
         tip = self.small_font.render(
             "Pressione ESC para voltar ao menu",

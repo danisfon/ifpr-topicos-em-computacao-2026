@@ -5,6 +5,7 @@ from pathlib import Path
 import pygame
 
 from ..core.config import P1_CONTROLS, P2_CONTROLS
+from ..core.audio import SoundEffects
 from ..domain.entities import Car
 from ..domain.gameWorld import PlayerLane
 
@@ -40,6 +41,7 @@ class GameManager:
         self._result_saved = False
         self._finish_timer = 0.0
         self.save_message = ''
+        self.audio = SoundEffects()
 
         self.p1, self.p2 = self._create_players()
 
@@ -111,6 +113,7 @@ class GameManager:
 
         p1 = PlayerLane(self.player_names[0], track1, p1_car, (255, 255, 255))
         p2 = PlayerLane(self.player_names[1], track2, p2_car, (255, 255, 255))
+        p1.audio = p2.audio = self.audio
 
         return p1, p2
 

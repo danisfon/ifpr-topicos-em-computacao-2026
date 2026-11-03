@@ -32,6 +32,7 @@ class GameWorld:
         self.alive = True
         self.survival_time = 0.0
         self.bonus_score = 0
+        self.audio = None
 
         self.obstacles: list[Obstacle] = []
         self.items: list[Consumable] = []
@@ -152,6 +153,8 @@ class GameWorld:
         )
 
         if hit_obstacle and collided_obstacle is not None:
+            if self.audio:
+                self.audio.play('crash')
             if self.car.has_shield:
                 self.car.has_shield = False
                 if collided_obstacle in self.obstacles:
@@ -161,6 +164,8 @@ class GameWorld:
                 self.alive = False
 
         for consumed in consumed_items:
+            if self.audio:
+                self.audio.play('pickup')
             self._apply_consumable_effect(consumed.effect)
             if consumed.effect != 'oleo':
                 self.bonus_score += 25
