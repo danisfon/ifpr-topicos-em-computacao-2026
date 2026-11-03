@@ -59,7 +59,7 @@ class GameWorld:
 
     @property
     def score(self) -> int:
-        return int(self.survival_time * 10.0) + self.bonus_score
+        return int(self.survival_time * 10.0 + 1e-8) + self.bonus_score
 
     def update(self, dt: float, keys) -> None:
         self.car.update_animation(dt)
@@ -215,6 +215,8 @@ class GameWorld:
         self.car.MAX_SPEED = Car.MAX_SPEED + (30.0 if self._speed_boost_timer else 0.0) - (100.0 if self._oil_timer else 0.0)
 
     def draw(self, screen: pygame.Surface, font, small_font) -> None:
+        previous_clip = screen.get_clip()
+        screen.set_clip(self.track_rect)
         self._draw_track_background(screen)
         self._draw_lane_stripes(screen)
 
@@ -229,6 +231,7 @@ class GameWorld:
         for projectile in self.projectiles:
             projectile.draw(screen)
         self._draw_hud(screen, font, small_font)
+        screen.set_clip(previous_clip)
 
     def _draw_track_background(self, screen: pygame.Surface) -> None:
         pygame.draw.rect(screen, (70, 70, 70), self.track_rect)

@@ -95,6 +95,38 @@ class GameTests(unittest.TestCase):
         world.update(.1, defaultdict(lambda: True))
         self.assertEqual(world.projectiles, [])
 
+    def test_shield_consumed_then_next_collision_eliminates(self):
+        world = self.game.p1
+        def obstacle():
+            return Obstacle(world.car.position.x, world.car.position.y, 70, 100, 180, str(SPRITES / 'obstaculo.png'))
+        world.car.has_shield = True
+        world.obstacles.append(obstacle())
+        world._resolve_collisions()
+        self.assertTrue(world.alive)
+        self.assertFalse(world.car.has_shield)
+        world.obstacles.append(obstacle())
+        world._resolve_collisions()
+        self.assertFalse(world.alive)
+        self.assertTrue(world.car.damaged)
+
+    def test_finish_returns_to_menu(self):
+        self.game.p1.alive = self.game.p2.alive = False
+        self.game._finish_timer = 10.0
+        pygame.event.clear()
+        self.assertEqual(self.game.run(), 'menu')
+
+    def test_names_and_history_navigation(self):
+        from game.interface.scores import ScoreScreens
+        screens = ScoreScreens(self.screen, pygame.time.Clock(), self.game.small_font, ScoreStore())
+        pygame.event.clear()
+        pygame.event.post(pygame.event.Event(pygame.TEXTINPUT, text='Ana'))
+        pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN))
+        pygame.event.post(pygame.event.Event(pygame.TEXTINPUT, text='João'))
+        pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN))
+        self.assertEqual(screens.names(), ('Ana', 'João'))
+        pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_ESCAPE))
+        self.assertEqual(screens.history(), 'menu')
+
 
 if __name__ == '__main__':
     unittest.main()
