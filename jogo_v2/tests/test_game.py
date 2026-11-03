@@ -56,13 +56,14 @@ class GameTests(unittest.TestCase):
             self.game.score_store = ScoreStore(path)
             self.game.p1.name = 'João'
             self.game.p1.survival_time = 12.5
+            self.game.p1.coins_collected = 3
             self.game.p1.alive = self.game.p2.alive = False
             self.game._update_result(.1)
             self.game._update_result(.1)
             rows = ScoreStore(path).read()
             self.assertEqual(len(rows), 2)
             self.assertEqual(rows[0]['name'], 'João')
-            self.assertEqual(rows[0]['score'], 125)
+            self.assertEqual(rows[0]['score'], 30)
 
     def test_invalid_history_is_preserved(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -82,11 +83,48 @@ class GameTests(unittest.TestCase):
         world.obstacles.append(obstacle)
         world.projectiles.append(projectile)
         world._update_projectiles(.1)
-        self.assertEqual(world.bonus_score, 50)
+        self.assertEqual(world.score, 0)
         self.assertEqual(world.projectiles, [])
         self.assertEqual(world.obstacles, [])
         world._update_projectiles(.1)
-        self.assertEqual(world.bonus_score, 50)
+        self.assertEqual(world.score, 0)
+
+    def test_coins_give_ten_points_once_and_only_to_collector(self):
+        world = self.game.p1
+        world.survival_time = 100.0
+        self.assertEqual(world.score, 0)
+        for count in range(1, 4):
+            world._spawn_coin()
+            coin = world.items[-1]
+            coin.position.x, coin.position.y = world.car.position.x, world.car.position.y
+            world._resolve_collisions()
+            self.assertNotIn(coin, world.items)
+            self.assertEqual(world.score, count * 10)
+            world._resolve_collisions()
+            self.assertEqual(world.score, count * 10)
+        self.assertEqual(self.game.p2.score, 0)
+        for effect in ('speed', 'shield', 'oleo'):
+            world._apply_consumable_effect(effect)
+        self.assertEqual(world.score, 30)
+        self.game.p1, self.game.p2 = self.game._create_players()
+        self.assertEqual(self.game.p1.score, 0)
+
+    def test_coin_spawn_movement_and_offscreen_cleanup(self):
+        from collections import defaultdict
+        world = self.game.p1
+        world._obstacle_spawn_timer = 100.0
+        world._coin_spawn_timer = 0.0
+        world.update(.01, defaultdict(bool))
+        coin = next(item for item in world.items if item.effect == 'coin')
+        self.assertGreaterEqual(coin.position.y, world.track_rect.top)
+        self.assertLessEqual(coin.position.y + coin.size.y, world.track_rect.bottom)
+        before = coin.position.x
+        world.update(.01, defaultdict(bool))
+        self.assertLess(coin.position.x, before)
+        coin.position.x = world.track_rect.left - 100.0
+        world.update(.01, defaultdict(bool))
+        self.assertNotIn(coin, world.items)
+        self.assertEqual(world.score, 0)
 
     def test_dead_player_cannot_fire(self):
         from collections import defaultdict

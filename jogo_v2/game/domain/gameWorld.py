@@ -17,6 +17,8 @@ class GameWorld:
     OBSTACLE_HEIGHT = 100
     ITEM_WIDTH      = 28
     ITEM_HEIGHT     = 28
+    COIN_SIZE       = 32
+    COIN_POINTS     = 10
 
     def __init__(
         self,
@@ -32,7 +34,7 @@ class GameWorld:
 
         self.alive = True
         self.survival_time = 0.0
-        self.bonus_score = 0
+        self.coins_collected = 0
         self.audio = None
         self.weapon = Weapon()
         self.projectiles = []
@@ -42,6 +44,7 @@ class GameWorld:
 
         self._obstacle_spawn_timer = 0.0
         self._item_spawn_timer = 3.0
+        self._coin_spawn_timer = 0.8
         self._lane_offset = 0.0
         self._speed_boost_timer = 0.0
         self._oil_timer = 0.0
@@ -59,7 +62,7 @@ class GameWorld:
 
     @property
     def score(self) -> int:
-        return int(self.survival_time * 10.0 + 1e-8) + self.bonus_score
+        return self.coins_collected * self.COIN_POINTS
 
     def update(self, dt: float, keys) -> None:
         self.car.update_animation(dt)
@@ -93,6 +96,11 @@ class GameWorld:
             self._spawn_item()
             self._item_spawn_timer = random.uniform(3.0, 6.0)
 
+        self._coin_spawn_timer -= dt
+        if self._coin_spawn_timer <= 0.0:
+            self._spawn_coin()
+            self._coin_spawn_timer = random.uniform(1.0, 1.8)
+
         for item in self.items:
             item.update(dt)
         self.items = [i for i in self.items if i.rect().right > self.track_rect.left - 60]
@@ -108,7 +116,6 @@ class GameWorld:
             if hit is not None:
                 self.obstacles.remove(hit)
                 self.projectiles.remove(projectile)
-                self.bonus_score += 50
                 if self.audio:
                     self.audio.play('crash')
             elif projectile.position.x > self.track_rect.right:
@@ -172,7 +179,20 @@ class GameWorld:
             sprite_path=sprite_path,
         ))
 
+    def _spawn_coin(self) -> None:
+        self.items.append(Consumable(
+            x=float(self.track_rect.right + 40),
+            y=random.uniform(self.track_rect.top + 8, self.track_rect.bottom - self.COIN_SIZE - 8),
+            max_width=self.COIN_SIZE,
+            max_height=self.COIN_SIZE,
+            speed=self.current_world_speed(),
+            effect='coin',
+            sprite_path=str(_SPRITES_DIR / 'coin.svg'),
+        ))
+
     def _resolve_collisions(self) -> None:
+        if not self.alive:
+            return
         hit_obstacle, consumed_items, collided_obstacle = CollisionManager.resolve_basic(
             self.car, self.obstacles, self.items
         )
@@ -187,16 +207,17 @@ class GameWorld:
             else:
                 self.car.damaged = True
                 self.alive = False
+                return
 
         for consumed in consumed_items:
             if self.audio:
                 self.audio.play('pickup')
             self._apply_consumable_effect(consumed.effect)
-            if consumed.effect != 'oleo':
-                self.bonus_score += 25
 
     def _apply_consumable_effect(self, effect: str) -> None:
-        if effect == "speed":
+        if effect == 'coin':
+            self.coins_collected += 1
+        elif effect == "speed":
             self._speed_boost_timer = 3.5
         elif effect == "oleo":
             self._oil_timer = 3.5
@@ -255,7 +276,7 @@ class GameWorld:
 
     def _draw_hud(self, screen: pygame.Surface, font, small_font) -> None:
         name_surf   = font.render(self.name, True, self.accent_color)
-        time_surf   = small_font.render(f"Tempo: {self.survival_time:.2f}s | Pontos: {self.score}", True, (255, 255, 255))
+        score_surf = small_font.render(f"Moedas: {self.coins_collected} | Pontos: {self.score}", True, (255, 220, 90))
 
         status_color = (120, 255, 120) if self.alive else (255, 120, 120)
         status_surf = small_font.render(
@@ -264,7 +285,7 @@ class GameWorld:
 
         hud_x = self.track_rect.left + 10
         screen.blit(name_surf,   (hud_x, self.track_rect.top + 8))
-        screen.blit(time_surf,   (hud_x, self.track_rect.top + 42))
+        screen.blit(score_surf,  (hud_x, self.track_rect.top + 42))
         screen.blit(status_surf, (hud_x, self.track_rect.top + 64))
 
 
