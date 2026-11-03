@@ -1,0 +1,5 @@
+__pycache__/
+*.py[cod]
+.test-deps/
+jogo_v2/data/
+.venv/

@@ -39,10 +39,14 @@ class GameWorld:
         self._item_spawn_timer = 3.0
         self._lane_offset = 0.0
         self._speed_boost_timer = 0.0
+        self._oil_timer = 0.0
 
         self._obstacle_sprites: list[str] = [
             str(_SPRITES_DIR / "obstaculo.png"),
             str(_SPRITES_DIR / "obstaculo2.png"),
+        ]
+        self.obstacle_types = [
+            {"sprite": path, "static": False} for path in self._obstacle_sprites
         ]
 
     def current_world_speed(self) -> float:
@@ -87,7 +91,10 @@ class GameWorld:
 
         base_speed = self.current_world_speed()
         speed = max(180.0, min(600.0, random.uniform(base_speed * 0.7, base_speed * 1.4)))
-        sprite_path = random.choice(self._obstacle_sprites)
+        obstacle_type = random.choice(self.obstacle_types)
+        sprite_path = obstacle_type["sprite"]
+        if obstacle_type["static"]:
+            speed = base_speed
 
         self.obstacles.append(Obstacle(
             x=x,
@@ -114,10 +121,12 @@ class GameWorld:
         ))
 
         speed = float(random.randint(180, 350))
-        effect = random.choice(["speed", "shield", "stability"])
+        effect = random.choice(["speed", "shield", "oleo"])
 
         if effect == "shield":
             sprite_path = str(_SPRITES_DIR / "shield.png")
+        elif effect == "oleo":
+            sprite_path = str(_SPRITES_DIR / "oleo.png")
         else:
             sprite_path = str(_SPRITES_DIR / "speed.png")
 
@@ -150,18 +159,22 @@ class GameWorld:
 
     def _apply_consumable_effect(self, effect: str) -> None:
         if effect == "speed":
-            self.car.MAX_SPEED += 30.0
             self._speed_boost_timer = 3.5
+        elif effect == "oleo":
+            self._oil_timer = 3.5
         elif effect == "shield":
             self.car.has_shield = True
         elif effect == "stability":
             self.car.FRICTION = min(900.0, self.car.FRICTION + 80.0)
+        self._refresh_speed()
 
     def _update_active_effects(self, dt: float) -> None:
-        if self._speed_boost_timer > 0.0:
-            self._speed_boost_timer -= dt
-            if self._speed_boost_timer <= 0.0:
-                self.car.MAX_SPEED = max(340.0, self.car.MAX_SPEED - 30.0)
+        self._speed_boost_timer = max(0.0, self._speed_boost_timer - dt)
+        self._oil_timer = max(0.0, self._oil_timer - dt)
+        self._refresh_speed()
+
+    def _refresh_speed(self) -> None:
+        self.car.MAX_SPEED = Car.MAX_SPEED + (30.0 if self._speed_boost_timer else 0.0) - (100.0 if self._oil_timer else 0.0)
 
     def draw(self, screen: pygame.Surface, font, small_font) -> None:
         self._draw_track_background(screen)
