@@ -146,7 +146,7 @@ class GameManager:
             True, (255, 255, 255),
         )
         controls = self.small_font.render(
-            "P1: WASD  |  P2: Setas  |  ESC: Menu  |  R: Reiniciar",
+            "P1: WASD + Espaço  |  P2: Setas + Ctrl direito  |  ESC: Menu  |  R: Reiniciar",
             True, (220, 220, 220),
         )
 

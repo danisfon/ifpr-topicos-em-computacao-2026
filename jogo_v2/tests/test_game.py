@@ -7,6 +7,8 @@ import tempfile
 from pathlib import Path
 import pygame
 from game.core.scores import ScoreStore
+from game.domain.entities import Obstacle
+from game.domain.weapons import SPRITES
 from game.domain.animation import Animation
 from game.phases.phase_1 import GameManager
 
@@ -69,6 +71,29 @@ class GameTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 ScoreStore(path).save_match((self.game.p1, self.game.p2))
             self.assertEqual(path.read_text(), 'invalid')
+
+    def test_weapon_cooldown_and_hit(self):
+        world = self.game.p1
+        projectile = world.weapon.fire(world.car)
+        self.assertIsNone(world.weapon.fire(world.car))
+        world.weapon.update(.4)
+        self.assertIsNotNone(world.weapon.fire(world.car))
+        obstacle = Obstacle(projectile.position.x + 40, projectile.position.y, 70, 100, 180, str(SPRITES / 'obstaculo.png'))
+        world.obstacles.append(obstacle)
+        world.projectiles.append(projectile)
+        world._update_projectiles(.1)
+        self.assertEqual(world.bonus_score, 50)
+        self.assertEqual(world.projectiles, [])
+        self.assertEqual(world.obstacles, [])
+        world._update_projectiles(.1)
+        self.assertEqual(world.bonus_score, 50)
+
+    def test_dead_player_cannot_fire(self):
+        from collections import defaultdict
+        world = self.game.p1
+        world.alive = False
+        world.update(.1, defaultdict(lambda: True))
+        self.assertEqual(world.projectiles, [])
 
 
 if __name__ == '__main__':

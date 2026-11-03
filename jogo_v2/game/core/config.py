@@ -11,6 +11,7 @@ class GameConfig:
 
 
 P1_CONTROLS = {
+    "fire": pygame.K_SPACE,
     "left": pygame.K_a,
     "right": pygame.K_d,
     "up": pygame.K_w,
@@ -18,6 +19,7 @@ P1_CONTROLS = {
 }
 
 P2_CONTROLS = {
+    "fire": pygame.K_RCTRL,
     "left": pygame.K_LEFT,
     "right": pygame.K_RIGHT,
     "up": pygame.K_UP,

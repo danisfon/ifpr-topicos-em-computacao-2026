@@ -7,6 +7,7 @@ import pygame
 
 from .collision import CollisionManager
 from .entities import Car, Obstacle, Consumable
+from .weapons import Weapon
 
 _SPRITES_DIR = Path(__file__).resolve().parents[2] / "assets" / "sprites"
 
@@ -33,6 +34,8 @@ class GameWorld:
         self.survival_time = 0.0
         self.bonus_score = 0
         self.audio = None
+        self.weapon = Weapon()
+        self.projectiles = []
 
         self.obstacles: list[Obstacle] = []
         self.items: list[Consumable] = []
@@ -68,6 +71,13 @@ class GameWorld:
         self._lane_offset += self.current_world_speed() * dt
 
         self.car.update(dt, keys)
+        self.weapon.update(dt)
+        if keys[self.car.controls['fire']]:
+            projectile = self.weapon.fire(self.car)
+            if projectile is not None:
+                self.projectiles.append(projectile)
+                if self.audio:
+                    self.audio.play('shot')
 
         self._obstacle_spawn_timer -= dt
         if self._obstacle_spawn_timer <= 0.0:
@@ -87,7 +97,22 @@ class GameWorld:
             item.update(dt)
         self.items = [i for i in self.items if i.rect().right > self.track_rect.left - 60]
 
+        self._update_projectiles(dt)
         self._resolve_collisions()
+
+    def _update_projectiles(self, dt: float) -> None:
+        for projectile in self.projectiles[:]:
+            projectile.update(dt)
+            targets = sorted(self.obstacles, key=lambda obstacle: obstacle.position.x)
+            hit = next((obstacle for obstacle in targets if projectile.swept_rect().colliderect(obstacle.rect())), None)
+            if hit is not None:
+                self.obstacles.remove(hit)
+                self.projectiles.remove(projectile)
+                self.bonus_score += 50
+                if self.audio:
+                    self.audio.play('crash')
+            elif projectile.position.x > self.track_rect.right:
+                self.projectiles.remove(projectile)
 
     def _spawn_obstacle(self) -> None:
         x = float(self.track_rect.right + random.randint(0, 280))
@@ -200,6 +225,9 @@ class GameWorld:
             obstacle.draw(screen)
 
         self.car.draw(screen)
+        self.weapon.draw(screen, self.car)
+        for projectile in self.projectiles:
+            projectile.draw(screen)
         self._draw_hud(screen, font, small_font)
 
     def _draw_track_background(self, screen: pygame.Surface) -> None:
