@@ -117,7 +117,9 @@ class GameTests(unittest.TestCase):
 
     def test_names_and_history_navigation(self):
         from game.interface.scores import ScoreScreens
-        screens = ScoreScreens(self.screen, pygame.time.Clock(), self.game.small_font, ScoreStore())
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        screens = ScoreScreens(self.screen, pygame.time.Clock(), self.game.small_font, ScoreStore(Path(directory.name) / 'scores.json'))
         pygame.event.clear()
         pygame.event.post(pygame.event.Event(pygame.TEXTINPUT, text='Ana'))
         pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN))
@@ -126,6 +128,35 @@ class GameTests(unittest.TestCase):
         self.assertEqual(screens.names(), ('Ana', 'João'))
         pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_ESCAPE))
         self.assertEqual(screens.history(), 'menu')
+
+    def test_names_are_unique_and_reserved_without_a_match(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = ScoreStore(Path(directory) / 'scores.json')
+            self.assertTrue(any(store.validate_names([' Ana ', 'ANA'], [])))
+            self.assertTrue(any(store.validate_names(['  ', 'Bia'], [])))
+            self.assertEqual(store.register_names([' Ana ', 'João']), ('Ana', 'João'))
+            reloaded = ScoreStore(store.path)
+            with self.assertRaises(ValueError):
+                reloaded.register_names(['ana', 'Bia'])
+            self.assertFalse(store.path.exists())
+            self.assertEqual(reloaded.registered_names(), ['Ana', 'João'])
+
+    def test_history_names_cannot_be_registered_again(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = ScoreStore(Path(directory) / 'scores.json')
+            self.game.p1.name = 'Ana Maria'
+            store.save_match((self.game.p1, self.game.p2))
+            with self.assertRaises(ValueError):
+                store.register_names(['  ANA   MARIA ', 'Bia'])
+
+    def test_driving_frames_keep_silhouette_still(self):
+        car = self.game.p1.car
+        frames = car.animations.animations['driving'].sprites
+        expected = pygame.mask.from_surface(car.sprite.surface)
+        for frame in frames:
+            actual = pygame.mask.from_surface(frame)
+            self.assertEqual(actual.count(), expected.count())
+            self.assertEqual(actual.overlap_area(expected, (0, 0)), expected.count())
 
 
 if __name__ == '__main__':

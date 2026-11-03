@@ -18,11 +18,12 @@ Requer Python 3.10 ou superior. Versão verificada: Python 3.12 e Pygame 2.6.1.
 - Jogador 1: WASD para mover; Espaço para disparar.
 - Jogador 2: setas para mover; Ctrl direito para disparar.
 - ESC: menu. No resultado: ENTER volta ao menu; R reinicia.
-- Informe os nomes antes da partida. ENTER avança, TAB troca o campo.
+- Cadastre nomes únicos antes da partida. ENTER avança, TAB ou clique troca o campo.
+- Nomes já cadastrados ou presentes no histórico não podem ser usados novamente (ignorando maiúsculas e espaços extras). O cadastro é reservado ao confirmar, mesmo se a partida for abandonada. R reinicia com os mesmos pilotos.
 
 Pontuação: 10 por segundo, 25 por coleta benéfica, 50 por obstáculo destruído. Óleo reduz a velocidade por 3,5 segundos; turbo aumenta pelo mesmo período; escudo absorve uma colisão. A arma dispara a cada 0,4 segundo enquanto a tecla estiver pressionada.
 
-O histórico fica em `jogo_v2/data/scores.json`, fora do Git. Partidas abandonadas não são salvas. O menu Pontuações mostra o ranking completo em páginas.
+O histórico fica em `jogo_v2/data/scores.json` e os cadastros em `jogo_v2/data/players.json`, fora do Git. Pontuações de partidas abandonadas não são salvas. O menu Pontuações mostra o ranking completo em páginas.
 
 ## Organização
 
