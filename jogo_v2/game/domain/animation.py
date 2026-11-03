@@ -50,10 +50,10 @@ class AnimationSet:
 
 
 def driving_frames(image: pygame.Surface) -> list[pygame.Surface]:
-    """Reaproveita a arte do carro em quadros de vibração da suspensão."""
+    """Varia suavemente a iluminação, mantendo carro e arma ancorados."""
     frames = []
-    for offset in (0, -1, 0, 1):
-        frame = pygame.Surface(image.get_size(), pygame.SRCALPHA)
-        frame.blit(image, (0, offset))
+    for brightness in (255, 252, 250, 252):
+        frame = image.copy()
+        frame.fill((brightness, brightness, brightness, 255), special_flags=pygame.BLEND_RGBA_MULT)
         frames.append(frame)
     return frames
