@@ -7,7 +7,7 @@ SPRITES = Path(__file__).resolve().parents[2] / 'assets' / 'sprites'
 
 class Projectile(DynamicObject):
     def __init__(self, position: Vec2):
-        super().__init__(position.x, position.y, 28, 10, str(SPRITES / 'projectile.svg'))
+        super().__init__(position.x, position.y, 28, 10, str(SPRITES / 'projectile.png'))
         self.velocity = Vec2(850.0, 0.0)
         self.previous_position = Vec2(position.x, position.y)
 
@@ -25,7 +25,7 @@ class Weapon:
     COOLDOWN = 0.4
 
     def __init__(self):
-        self.sprite = Sprite(str(SPRITES / 'weapon.svg'), 42, 18)
+        self.sprite = Sprite(str(SPRITES / 'weapon.png'), 42, 18)
         self.cooldown = 0.0
 
     def update(self, dt: float) -> None:

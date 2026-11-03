@@ -187,7 +187,7 @@ class GameWorld:
             max_height=self.COIN_SIZE,
             speed=self.current_world_speed(),
             effect='coin',
-            sprite_path=str(_SPRITES_DIR / 'coin.svg'),
+            sprite_path=str(_SPRITES_DIR / 'coin.png'),
         ))
 
     def _resolve_collisions(self) -> None:
